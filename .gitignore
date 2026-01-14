@@ -1,0 +1,146 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+dfenv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# Model checkpoints and logs
+checkpoints/
+logs/
+*.h5
+*.hdf5
+*.ckpt
+*.pb
+*.tflite
+*.pth
+*.pt
+*.weights
+
+# Dataset files (uncomment if you don't want to track datasets)
+# data/raw/
+# data/processed/
+# *.jpg
+# *.jpeg
+# *.png
+# *.mp4
+# *.avi
+
+# Reports and outputs
+reports/visualizations/
+reports/statistics/
+evaluation_results/
+*.html
+*.pdf
+!reports/*.md
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# TensorFlow
+*.pb
+*.tflite
+*.pbtxt
+saved_model/
+
+# PyTorch (if used)
+*.pth
+*.pt
+
+# Cache
+.cache/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.out
+
+# Data files (large files - uncomment as needed)
+# *.csv
+# *.parquet
+# *.feather
+
+# Docker
+.dockerignore
+
+# MLflow (if used)
+mlruns/
+
+# Weights & Biases (if used)
+wandb/
+
+# Local configuration overrides
+config.local.yaml
+config.local.yml
+

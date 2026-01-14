@@ -1,0 +1,98 @@
+{
+  "eda": {
+    "datasets": {
+      "faceforensics": {
+        "compressions": ["c0", "c23", "c40"],
+        "methods": ["Deepfakes", "Face2Face", "FaceSwap", "NeuralTextures"]
+      },
+      "celebdf": {
+        "methods": ["Deepfakes", "FaceSwap"]
+      },
+      "dfdc": {
+        "methods": ["Deepfakes", "FaceSwap", "FaceShifter"]
+      }
+    },
+    "analysis": {
+      "basic_statistics": {
+        "enabled": true,
+        "include": [
+          "class_distribution",
+          "image_counts",
+          "resolution_analysis",
+          "aspect_ratio_analysis",
+          "file_format_distribution",
+          "compression_analysis"
+        ]
+      },
+      "visual_analysis": {
+        "enabled": true,
+        "include": [
+          "side_by_side_comparison",
+          "difference_maps",
+          "frequency_spectrum",
+          "noise_patterns",
+          "histogram_comparison",
+          "edge_analysis"
+        ],
+        "num_samples": 50
+      },
+      "feature_analysis": {
+        "enabled": true,
+        "include": [
+          "frequency_domain",
+          "dct_analysis",
+          "noise_patterns",
+          "color_consistency",
+          "texture_analysis",
+          "pca_visualization",
+          "tsne_visualization"
+        ],
+        "n_components_pca": 50,
+        "n_components_tsne": 2,
+        "perplexity": 30
+      },
+      "artifact_detection": {
+        "enabled": true,
+        "include": [
+          "face_warping",
+          "lighting_inconsistency",
+          "blending_boundaries",
+          "jpeg_artifacts",
+          "frequency_inconsistencies"
+        ]
+      },
+      "statistical_tests": {
+        "enabled": true,
+        "include": [
+          "kolmogorov_smirnov",
+          "chi_square",
+          "t_test",
+          "anova",
+          "mann_whitney"
+        ],
+        "alpha": 0.05
+      }
+    },
+    "visualization": {
+      "style": "seaborn",
+      "color_palette": "Set2",
+      "figure_size": [12, 8],
+      "dpi": 300,
+      "interactive": true,
+      "save_format": ["png", "html"]
+    },
+    "report": {
+      "format": ["html", "pdf"],
+      "include_appendix": true,
+      "interactive_plots": true,
+      "auto_open": false
+    },
+    "output": {
+      "base_dir": "./reports",
+      "visualizations_dir": "./reports/visualizations",
+      "statistics_dir": "./reports/statistics",
+      "reports_dir": "./reports"
+    }
+  }
+}
+

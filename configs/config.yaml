@@ -1,0 +1,125 @@
+# Deepfake Detection Configuration
+
+# Dataset Configuration
+dataset:
+  name: "faceforensics"  # faceforensics, celebdf, dfdc
+  root_dir: "C:/Users/HP/Documents/QUEST/deepfake project/dataset"
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+  compression: "c23"  # c0, c23, c40 for FaceForensics++
+  image_size: [224, 224]
+  batch_size: 32
+  num_parallel_calls: 4
+  prefetch_buffer: 2
+
+# Model Configuration
+model:
+  name: "dual_stream_efficientnet"
+  backbone: "efficientnet-b4"
+  pretrained: true
+  num_classes: 2
+  dropout_rate: 0.5
+  frequency_branch:
+    enabled: true
+    dct_size: 8
+    num_filters: 64
+  attention_fusion:
+    enabled: true
+    attention_dim: 256
+    num_heads: 8
+
+# Training Configuration
+training:
+  epochs: 100
+  initial_learning_rate: 0.001
+  learning_rate_schedule: "cosine"
+  warmup_epochs: 5
+  mixed_precision: true
+  gradient_clip_norm: 1.0
+  early_stopping:
+    patience: 15
+    monitor: "val_loss"
+  class_weights:
+    enabled: true
+    # Will be calculated from EDA if not specified
+    real: 1.0
+    fake: 1.0
+
+# Data Augmentation
+augmentation:
+  enabled: true
+  horizontal_flip: 0.5
+  rotation: 15
+  brightness: 0.2
+  contrast: 0.2
+  saturation: 0.2
+  hue: 0.1
+  gaussian_noise: 0.1
+  blur: 0.1
+  jpeg_compression: 0.1
+
+# Face Detection
+face_detection:
+  method: "mtcnn"  # mtcnn, tensorflow
+  min_face_size: 40
+  scale_factor: 0.709
+  margin: 0.25
+  align_faces: true
+
+# Loss Configuration
+loss:
+  name: "focal_loss"
+  alpha: 0.25
+  gamma: 2.0
+  label_smoothing: 0.1
+
+# Metrics
+metrics:
+  - "accuracy"
+  - "precision"
+  - "recall"
+  - "f1_score"
+  - "auc"
+
+# Callbacks
+callbacks:
+  tensorboard:
+    enabled: true
+    log_dir: "./logs/tensorboard"
+  model_checkpoint:
+    enabled: true
+    save_best_only: true
+    monitor: "val_loss"
+    save_dir: "./checkpoints"
+  reduce_lr:
+    enabled: true
+    factor: 0.5
+    patience: 5
+    min_lr: 1e-7
+
+# EDA Configuration
+eda:
+  enabled: true
+  output_dir: "./reports"
+  generate_html: true
+  generate_pdf: false
+  interactive_plots: true
+  statistical_tests: true
+  artifact_detection: true
+
+# Inference Configuration
+inference:
+  confidence_threshold: 0.5
+  batch_size: 1
+  return_attention_maps: true
+  return_gradcam: true
+
+# Paths
+paths:
+  checkpoints: "./checkpoints"
+  logs: "./logs"
+  reports: "./reports"
+  visualizations: "./reports/visualizations"
+  statistics: "./reports/statistics"
+
