@@ -15,7 +15,7 @@ dataset:
 
 # Model Configuration
 model:
-  name: "dual_stream_efficientnet"
+  name: "three_stream_efficientnet"
   backbone: "efficientnet-b4"
   pretrained: true
   num_classes: 2
@@ -24,6 +24,9 @@ model:
     enabled: true
     dct_size: 8
     num_filters: 64
+  feature_stream:
+    enabled: true
+    input_dim: 128
   attention_fusion:
     enabled: true
     attention_dim: 256

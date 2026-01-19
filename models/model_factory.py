@@ -5,6 +5,7 @@ Model factory for creating different model architectures.
 import tensorflow as tf
 from typing import Dict, Optional
 from .dual_stream_efficientnet import DualStreamEfficientNet
+from .three_stream_net import ThreeStreamEfficientNet
 
 
 class ModelFactory:
@@ -31,6 +32,13 @@ class ModelFactory:
                 dropout_rate=config.get('dropout_rate', 0.5),
                 frequency_branch=config.get('frequency_branch', {}).get('enabled', True),
                 attention_fusion=config.get('attention_fusion', {}).get('enabled', True)
+            )
+        elif model_name == 'three_stream_efficientnet':
+            return ThreeStreamEfficientNet(
+                backbone_name=config.get('backbone', 'efficientnet-b4'),
+                num_classes=config.get('num_classes', 2),
+                dropout_rate=config.get('dropout_rate', 0.5),
+                feature_dim=config.get('feature_stream', {}).get('input_dim', 128)
             )
         else:
             raise ValueError(f"Unknown model name: {model_name}")
