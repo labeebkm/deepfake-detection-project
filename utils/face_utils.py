@@ -41,3 +41,4 @@ def extract_face_region(image: np.ndarray, bbox: Tuple[int, int, int, int],
 
 
 
+

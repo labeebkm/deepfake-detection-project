@@ -177,3 +177,4 @@ git status --ignored
 
 **Git setup complete!** Your repository is ready for version control. 🎉
 
+

@@ -77,8 +77,18 @@ class FrequencyNet(keras.Model):
         image_2d = tf.squeeze(image, axis=-1)  # [batch, h, w]
         
         # Apply 2D DCT: first along rows, then along columns
-        dct_rows = tf.signal.dct(image_2d, type=2, norm='ortho', axis=1)
-        dct_2d = tf.signal.dct(dct_rows, type=2, norm='ortho', axis=2)
+        # Note: tf.signal.dct may require axis=-1, so we transpose as needed
+        
+        # 1. DCT along rows (axis 1)
+        # Transpose to [batch, w, h] so rows become the last axis
+        image_perm = tf.transpose(image_2d, perm=[0, 2, 1])
+        dct_rows_perm = tf.signal.dct(image_perm, type=2, norm='ortho')
+        # Transpose back to [batch, h, w]
+        dct_rows = tf.transpose(dct_rows_perm, perm=[0, 2, 1])
+        
+        # 2. DCT along cols (axis 2)
+        # Cols are already the last axis in [batch, h, w]
+        dct_2d = tf.signal.dct(dct_rows, type=2, norm='ortho')
         
         # Get magnitude (DCT is real, but we take absolute for consistency)
         dct_magnitude = tf.abs(dct_2d)

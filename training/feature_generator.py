@@ -130,3 +130,19 @@ class FeatureGenerator:
             stats.append(kurtosis(channel) if len(channel) > 0 else 0)
             
         return stats
+
+
+
+
+#Just for testing - delete below code after testing
+if __name__ == "__main__":
+    import cv2
+
+    img = cv2.imread(r"C:\Users\HP\Documents\QUEST\deepfake project\dataset\real\real_00006.jpg")
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    fg = FeatureGenerator(feature_dim=128)
+    features = fg.extract(img)
+
+    print("Feature vector shape:", features.shape)
+    print("First 10 features:", features[:10])
