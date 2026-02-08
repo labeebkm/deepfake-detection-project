@@ -245,10 +245,12 @@ MIT License - See LICENSE file for details
 If you use this code, please cite:
 
 ```bibtex
-@software{deepfake_detection_tf,
-  title = {Deepfake Detection System with Comprehensive EDA},
-  author = {Your Name},
-  year = {2024}
+@software{deepfake_detection_three_stream,
+  title  = {Deepfake Image Detection Using Three-Stream EfficientNet},
+  author = {Labeeb K M},
+  year   = {2025},
+  url    = {https://github.com/labeebkm/deepfake-detection-project},
+  note   = {RGB, frequency-domain, and explicit forensic feature fusion}
 }
 ```
  To start the training
