@@ -251,9 +251,9 @@ If you use this code, please cite:
   year = {2024}
 }
 ```
-# To start the training
-# .\dfenv\python.exe serve.py --model_path .\checkpoints\best_model.weights.h5 --config configs\config.yaml
+ To start the training
+.\dfenv\python.exe serve.py --model_path .\checkpoints\best_model.weights.h5 --config configs\config.yaml
 
-# To test
-# curl.exe -F "file=@C:\Users\HP\Pictures\test.jpg" http://127.0.0.1:8000/predict
+To test
+curl.exe -F "file=@C:\Users\HP\Pictures\test.jpg" http://127.0.0.1:8000/predict
 
