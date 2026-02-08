@@ -1,6 +1,11 @@
-# Deepfake Detection System with Comprehensive EDA
+# Deepfake Image Detection using Three-Stream EfficientNet
 
-A complete deepfake image detection system using TensorFlow/Keras with comprehensive Exploratory Data Analysis (EDA).
+A robust deepfake image detection system built with TensorFlow/Keras, combining:
+- RGB spatial features
+- Frequency-domain features (DCT-based)
+- Explicit forensic features
+
+The project includes a modular training pipeline, inference API, evaluation scripts, and comprehensive Exploratory Data Analysis (EDA).
 
 ## Features
 
