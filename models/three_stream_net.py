@@ -5,9 +5,35 @@ Three-stream EfficientNet architecture: RGB + Frequency + Hand-crafted Features.
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from typing import Tuple, Optional
+from typing import Optional, Tuple
+
 from .frequency_net import FrequencyNet
-from .attention_fusion import AttentionFusion
+
+
+def _get_efficientnet_backbone(backbone_name: str):
+    """
+    Resolve an EfficientNet backbone constructor from a string like 'efficientnet-b4'.
+    """
+    name = (backbone_name or "efficientnet-b4").lower().replace("_", "-")
+
+    mapping = {
+        "efficientnet-b0": keras.applications.EfficientNetB0,
+        "efficientnet-b1": keras.applications.EfficientNetB1,
+        "efficientnet-b2": keras.applications.EfficientNetB2,
+        "efficientnet-b3": keras.applications.EfficientNetB3,
+        "efficientnet-b4": keras.applications.EfficientNetB4,
+        "efficientnet-b5": keras.applications.EfficientNetB5,
+        "efficientnet-b6": keras.applications.EfficientNetB6,
+        "efficientnet-b7": keras.applications.EfficientNetB7,
+    }
+
+    if name not in mapping:
+        raise ValueError(
+            f"Unsupported backbone_name='{backbone_name}'. "
+            f"Supported: {', '.join(sorted(mapping.keys()))}"
+        )
+    return mapping[name]
+
 
 class ThreeStreamEfficientNet(keras.Model):
     """
@@ -17,12 +43,17 @@ class ThreeStreamEfficientNet(keras.Model):
     3. Feature Stream (Dense MLP for hand-crafted features)
     """
     
-    def __init__(self, 
-                 backbone_name: str = 'efficientnet-b4',
-                 num_classes: int = 2,
-                 dropout_rate: float = 0.5,
-                 feature_dim: int = 64,  # Dimension of input hand-crafted features
-                 **kwargs):
+    def __init__(
+        self,
+        backbone_name: str = "efficientnet-b4",
+        pretrained: bool = True,
+        num_classes: int = 2,
+        dropout_rate: float = 0.5,
+        feature_dim: int = 128,  # Dim of the explicit hand-crafted feature vector
+        dct_size: int = 8,
+        num_filters: int = 64,
+        **kwargs,
+    ):
         """
         Initialize ThreeStreamEfficientNet.
         
@@ -33,18 +64,31 @@ class ThreeStreamEfficientNet(keras.Model):
             feature_dim: Size of the hand-crafted feature vector
         """
         super().__init__(**kwargs)
+
+        self.backbone_name = backbone_name
+        self.pretrained = pretrained
+        self.num_classes = num_classes
+        self.dropout_rate = dropout_rate
+        self.feature_dim = feature_dim
+        self.dct_size = dct_size
+        self.num_filters = num_filters
         
         # 1. RGB Stream
-        self.rgb_backbone = keras.applications.EfficientNetB4(
+        backbone_cls = _get_efficientnet_backbone(backbone_name)
+        weights = "imagenet" if pretrained else None
+        self.rgb_backbone = backbone_cls(
             include_top=False,
-            weights='imagenet',
+            weights=weights,
             input_shape=(224, 224, 3)
         )
         self.rgb_backbone.trainable = True
         self.rgb_pool = layers.GlobalAveragePooling2D()
         
-        # 2. Frequency Stream
-        self.frequency_net = FrequencyNet()
+        # 2. Frequency Stream (DCT)
+        self.frequency_net = FrequencyNet(
+            dct_size=dct_size,
+            num_filters=num_filters,
+        )
         self.freq_pool = layers.GlobalAveragePooling2D()
         
         # 3. Feature Stream (MLP)
@@ -68,6 +112,7 @@ class ThreeStreamEfficientNet(keras.Model):
         
         self.attention = layers.Attention()
         self.concat = layers.Concatenate(axis=1)
+        self.flatten = layers.Flatten()
         
         # Classification head
         self.dropout = layers.Dropout(dropout_rate)
@@ -107,13 +152,17 @@ class ThreeStreamEfficientNet(keras.Model):
         
         stacked = self.concat([rgb_expanded, freq_expanded, feat_expanded])
         
-        # Self-attention over the 3 modalities
-        # Query = Value = Key = stacked
-        attended = self.attention([stacked, stacked], training=training)
+        # Self-attention over the 3 modalities.
+        #
+        # Keras 3's `layers.Attention` expects `[query, value, key]` for shape
+        # inference (e.g., `model.summary()`), even though runtime often allows
+        # `[query, value]` with `key=value`. Pass all three explicitly so the
+        # model is fully traceable and summary-friendly.
+        attended = self.attention([stacked, stacked, stacked], training=training)
         
         # Global pooling over the streams (average or max) - or just flatten
         # We flatten: [batch, 3 * fusion_dim] -> dense
-        fused = layers.Flatten()(attended)
+        fused = self.flatten(attended)
         
         # Final classification
         x = self.dropout(fused, training=training)

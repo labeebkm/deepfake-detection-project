@@ -2,9 +2,9 @@
 Custom metrics for deepfake detection.
 """
 
-import tensorflow as tf
-from tensorflow import keras
 from typing import List
+
+from tensorflow import keras
 
 
 def get_metrics(metric_names: List[str]) -> List:
@@ -54,11 +54,4 @@ class F1Score(keras.metrics.Metric):
     def reset_state(self):
         self.precision.reset_state()
         self.recall.reset_state()
-
-
-
-
-
-
-
 

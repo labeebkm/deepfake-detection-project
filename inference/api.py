@@ -8,17 +8,21 @@ import numpy as np
 import cv2
 from PIL import Image
 import io
-from typing import Optional
 
 from .detector import DeepfakeDetector
 
 
-def create_app(model_path: str, confidence_threshold: float = 0.5) -> FastAPI:
+def create_app(
+    weights_path: str,
+    config_path: str,
+    confidence_threshold: float = 0.5,
+) -> FastAPI:
     """
     Create FastAPI application.
     
     Args:
-        model_path: Path to saved model
+        weights_path: Path to saved weights (e.g. best_model.weights.h5)
+        config_path: Path to config.yaml (used to rebuild the model)
         confidence_threshold: Confidence threshold
         
     Returns:
@@ -27,7 +31,11 @@ def create_app(model_path: str, confidence_threshold: float = 0.5) -> FastAPI:
     app = FastAPI(title="Deepfake Detection API")
     
     # Initialize detector
-    detector = DeepfakeDetector(model_path, confidence_threshold)
+    detector = DeepfakeDetector(
+        weights_path=weights_path,
+        config_path=config_path,
+        confidence_threshold=confidence_threshold,
+    )
     
     @app.get("/")
     def root():
@@ -67,11 +75,4 @@ def create_app(model_path: str, confidence_threshold: float = 0.5) -> FastAPI:
         return {"status": "healthy"}
     
     return app
-
-
-
-
-
-
-
 

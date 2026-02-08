@@ -5,19 +5,17 @@ Feature generator for extracting advanced statistical and texture features.
 import numpy as np
 import cv2
 from scipy.stats import skew, kurtosis
-import tensorflow as tf
 
 class FeatureGenerator:
     """
     Extracts explicit features from images to feed into the Feature Stream.
     Features include:
     1. ELA (Error Level Analysis) statistics
-    2. Texture features (LBP histograms)
+    2. Texture features (gradient magnitude / angle histograms)
     3. Color statistics (YCrCb moments)
-    4. Frequency domain coherence
     """
     
-    def __init__(self, feature_dim: int = 128):
+    def __init__(self, feature_dim: int = 128):     
         self.feature_dim = feature_dim
     
     def extract(self, image: np.ndarray) -> np.ndarray:
@@ -130,19 +128,3 @@ class FeatureGenerator:
             stats.append(kurtosis(channel) if len(channel) > 0 else 0)
             
         return stats
-
-
-
-
-#Just for testing - delete below code after testing
-if __name__ == "__main__":
-    import cv2
-
-    img = cv2.imread(r"C:\Users\HP\Documents\QUEST\deepfake project\dataset\real\real_00006.jpg")
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    fg = FeatureGenerator(feature_dim=128)
-    features = fg.extract(img)
-
-    print("Feature vector shape:", features.shape)
-    print("First 10 features:", features[:10])

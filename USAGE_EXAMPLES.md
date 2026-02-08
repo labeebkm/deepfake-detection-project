@@ -119,12 +119,12 @@ estimator = DataDifficultyEstimator()
 difficulty = estimator.estimate_difficulty(real_images, fake_images)
 
 if difficulty['difficulty_level'] == 'Easy':
-    print("Use standard EfficientNet architecture")
+    print("Use the three-stream model with lighter augmentation (faster training)")
 elif difficulty['difficulty_level'] == 'Medium':
-    print("Use dual-stream architecture with augmentation")
+    print("Use the three-stream model with standard augmentation")
 else:
-    print("Use advanced architecture with frequency branch and attention fusion")
-    print("Consider self-supervised learning")
+    print("Use the three-stream model and train longer with stronger augmentation")
+    print("Consider tuning frequency_stream (num_filters) and training schedule")
 ```
 
 ## Example 6: Command Line Usage
@@ -171,10 +171,10 @@ if quality['overall_score'] < 0.5:
 estimator = DataDifficultyEstimator()
 difficulty = estimator.estimate_difficulty(real_images, fake_images)
 
-# Adjust model architecture based on difficulty
+# Adjust training/model hyperparameters based on difficulty
 if difficulty['difficulty_level'] == 'Hard':
-    config['model']['frequency_branch']['enabled'] = True
-    config['model']['attention_fusion']['enabled'] = True
+    config['training']['epochs'] = max(config['training']['epochs'], 150)
+    config['model']['frequency_stream']['num_filters'] = 96
 ```
 
 ## Example 8: Batch Analysis

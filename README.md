@@ -4,8 +4,8 @@ A complete deepfake image detection system using TensorFlow/Keras with comprehen
 
 ## Features
 
-- **Dual-stream EfficientNet-B4** architecture with frequency analysis branch
-- **Attention-based fusion** module for combining RGB and frequency features
+- **Three-stream EfficientNet** architecture (RGB + DCT frequency + explicit forensic features)
+- **Attention-based stream fusion** for combining RGB, frequency, and explicit features
 - **Comprehensive EDA** with automated artifact detection
 - **Complete data pipeline** using tf.data API
 - **Mixed precision training** (FP16) for GPU acceleration
@@ -17,50 +17,50 @@ A complete deepfake image detection system using TensorFlow/Keras with comprehen
 
 ```
 deepfake-detection-tf/
-├── notebooks/              # Jupyter notebooks for EDA
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_feature_analysis.ipynb
-│   ├── 03_model_experiments.ipynb
-│   └── 04_results_analysis.ipynb
-├── eda/                    # EDA Python modules
-│   ├── data_analyzer.py
-│   ├── visualization.py
-│   ├── statistical_tests.py
-│   ├── artifact_detector.py
-│   └── report_generator.py
-├── configs/                # Configuration files
-│   ├── config.yaml
-│   └── eda_config.json
-├── data/                   # Data pipeline
-│   ├── dataset_loader.py
-│   ├── preprocessing.py
-│   ├── augmentation.py
-│   └── face_detection.py
-├── models/                 # Model architectures
-│   ├── dual_stream_efficientnet.py
-│   ├── frequency_net.py
-│   ├── attention_fusion.py
-│   └── model_factory.py
-├── training/               # Training utilities
-│   ├── trainer.py
-│   ├── losses.py
-│   ├── callbacks.py
-│   └── metrics.py
-├── inference/              # Inference utilities
-│   ├── detector.py
-│   └── api.py
-├── utils/                  # Utility functions
-│   ├── visualization.py
-│   ├── frequency_utils.py
-│   └── face_utils.py
-├── train.py                # Training script
-├── evaluate.py             # Evaluation script
-├── eda_report.py           # EDA report generation
-├── serve.py                # API server
-├── requirements.txt
-├── Dockerfile
-└── README.md
+|-- notebooks/              # Jupyter notebooks for EDA
+|   |-- 01_data_exploration.ipynb
+|   |-- 02_feature_analysis.ipynb
+|   |-- 03_model_experiments.ipynb
+|   `-- 04_results_analysis.ipynb
+|-- eda/                    # EDA Python modules
+|   |-- data_analyzer.py
+|   |-- visualization.py
+|   |-- statistical_tests.py
+|   |-- artifact_detector.py
+|   `-- report_generator.py
+|-- configs/                # Configuration files
+|   |-- config.yaml
+|   `-- eda_config.json
+|-- data/                   # Data pipeline
+|   |-- dataset_loader.py
+|   |-- preprocessing.py
+|   |-- augmentation.py
+|   `-- face_detection.py
+|-- models/                 # Model architectures
+|   |-- three_stream_net.py
+|   |-- frequency_net.py
+|   `-- model_factory.py
+|-- training/               # Training utilities
+|   |-- trainer.py
+|   |-- losses.py
+|   |-- callbacks.py
+|   `-- metrics.py
+|-- inference/              # Inference utilities
+|   |-- detector.py
+|   `-- api.py
+|-- utils/                  # Utility functions
+|   |-- visualization.py
+|   |-- frequency_utils.py
+|   `-- face_utils.py
+|-- train.py                # Training script
+|-- evaluate.py             # Evaluation script
+|-- eda_report.py           # EDA report generation
+|-- serve.py                # API server
+|-- requirements.txt
+|-- Dockerfile
+`-- README.md
 ```
+
 
 ## Installation
 
@@ -97,13 +97,13 @@ python train.py --config configs/config.yaml --data_dir ./data/raw
 ### 3. Evaluate Model
 
 ```bash
-python evaluate.py --model_path ./checkpoints/best_model.h5 --data_dir ./data/raw/test
+python evaluate.py --model_path ./checkpoints/best_model.weights.h5 --data_dir ./data/raw/test
 ```
 
 ### 4. Serve API
 
 ```bash
-python serve.py --model_path ./checkpoints/best_model.h5 --host 0.0.0.0 --port 8000
+python serve.py --model_path ./checkpoints/best_model.weights.h5 --config configs/config.yaml --host 0.0.0.0 --port 8000
 ```
 
 ## EDA Features
@@ -130,12 +130,12 @@ Edit `configs/eda_config.json` to customize EDA analysis options.
 
 ## Model Architecture
 
-The dual-stream architecture consists of:
+The three-stream architecture consists of:
 
 1. **RGB Stream**: EfficientNet-B4 backbone pretrained on ImageNet
-2. **Frequency Stream**: DCT-based frequency analysis network
-3. **Attention Fusion**: Multi-head attention module for feature fusion
-4. **Classification Head**: Binary classification with confidence scores
+2. **Frequency Stream**: DCT-based frequency analysis network (FrequencyNet)
+3. **Explicit Feature Stream**: MLP over hand-crafted forensic features (ELA, texture/gradient histograms, color moments)
+4. **Fusion + Head**: attention over the three stream embeddings + binary classification
 
 ## Dataset Format
 
@@ -246,4 +246,9 @@ If you use this code, please cite:
   year = {2024}
 }
 ```
+# To start the training
+# .\dfenv\python.exe serve.py --model_path .\checkpoints\best_model.weights.h5 --config configs\config.yaml
+
+# To test
+# curl.exe -F "file=@C:\Users\HP\Pictures\test.jpg" http://127.0.0.1:8000/predict
 

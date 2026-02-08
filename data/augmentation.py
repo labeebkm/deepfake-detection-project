@@ -7,7 +7,6 @@ import numpy as np
 from typing import Dict, Optional, Tuple
 try:
     import albumentations as A
-    from albumentations.pytorch import ToTensorV2
     ALBUMENTATIONS_AVAILABLE = True
 except ImportError:
     ALBUMENTATIONS_AVAILABLE = False
@@ -25,9 +24,21 @@ class Augmentor:
         """
         self.config = config or {}
         self.enabled = self.config.get('enabled', True)
+        self.use_albumentations = bool(self.config.get("use_albumentations", False))
+
+        # TensorFlow/Keras augmentation layers (used in augment_tf)
+        self._tf_random_rotation = None
+        rotation_degrees = self.config.get("rotation", 0)
+        if rotation_degrees and rotation_degrees > 0:
+            self._tf_random_rotation = tf.keras.layers.RandomRotation(
+                factor=rotation_degrees / 360.0,
+                fill_mode="reflect",
+            )
         
-        # Initialize Albumentations if available
-        if ALBUMENTATIONS_AVAILABLE:
+        # Albumentations is optional; TF augmentations are used by default.
+        # Many albumentations transforms have changed names across versions, so only
+        # build the pipeline when explicitly requested.
+        if ALBUMENTATIONS_AVAILABLE and self.use_albumentations:
             self.albumentations_transform = self._create_albumentations_pipeline()
         else:
             self.albumentations_transform = None
@@ -94,9 +105,8 @@ class Augmentor:
             image = tf.image.random_flip_left_right(image)
         
         # Random rotation
-        if self.config.get('rotation', 0) > 0:
-            angle = tf.random.uniform([], -self.config.get('rotation', 15), self.config.get('rotation', 15))
-            image = tf.image.rot90(image, k=tf.cast(angle / 90, tf.int32))
+        if self._tf_random_rotation is not None:
+            image = self._tf_random_rotation(image, training=True)
         
         # Random brightness
         if self.config.get('brightness', 0) > 0:
@@ -147,11 +157,4 @@ class Augmentor:
             image = image.astype(np.float32) / 255.0
         
         return image
-
-
-
-
-
-
-
 

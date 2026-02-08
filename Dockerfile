@@ -22,12 +22,6 @@ COPY . .
 EXPOSE 8000
 
 # Default command
-CMD ["python", "serve.py", "--model_path", "./checkpoints/best_model.h5", "--host", "0.0.0.0", "--port", "8000"]
-
-
-
-
-
-
+CMD ["python", "serve.py", "--model_path", "./checkpoints/best_model.weights.h5", "--config", "configs/config.yaml", "--host", "0.0.0.0", "--port", "8000"]
 
 

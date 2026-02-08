@@ -16,21 +16,18 @@ dataset:
 # Model Configuration
 model:
   name: "three_stream_efficientnet"
-  backbone: "efficientnet-b4"
+  # NOTE: Your current environment reports no GPU. EfficientNet-B0 is much faster on CPU.
+  # You can switch back to "efficientnet-b4" when training on a GPU.
+  backbone: "efficientnet-b0"
   pretrained: true
   num_classes: 2
   dropout_rate: 0.5
-  frequency_branch:
-    enabled: true
+  # Three-stream model = RGB (EfficientNet) + Frequency (DCT) + Explicit features
+  frequency_stream:
     dct_size: 8
     num_filters: 64
   feature_stream:
-    enabled: true
     input_dim: 128
-  attention_fusion:
-    enabled: true
-    attention_dim: 256
-    num_heads: 8
 
 # Training Configuration
 training:
@@ -38,7 +35,7 @@ training:
   initial_learning_rate: 0.001
   learning_rate_schedule: "cosine"
   warmup_epochs: 5
-  mixed_precision: true
+  mixed_precision: false
   gradient_clip_norm: 1.0
   early_stopping:
     patience: 15
@@ -125,4 +122,3 @@ paths:
   reports: "./reports"
   visualizations: "./reports/visualizations"
   statistics: "./reports/statistics"
-

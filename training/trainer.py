@@ -4,9 +4,8 @@ Training utilities.
 
 import tensorflow as tf
 from tensorflow import keras
-from typing import Dict, Optional
+from typing import Optional
 import yaml
-import os
 from .losses import FocalLoss
 from .callbacks import get_callbacks
 from .metrics import get_metrics
@@ -25,7 +24,6 @@ class Trainer:
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
         
-        self.model_config = self.config.get('model', {})
         self.training_config = self.config.get('training', {})
     
     def compile_model(self, model: keras.Model) -> keras.Model:
@@ -92,11 +90,4 @@ class Trainer:
         )
         
         return history
-
-
-
-
-
-
-
 

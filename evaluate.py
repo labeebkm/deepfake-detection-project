@@ -5,7 +5,6 @@ Model evaluation script.
 import argparse
 import os
 import yaml
-import tensorflow as tf
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
@@ -20,7 +19,7 @@ def main():
     parser.add_argument('--config', type=str, default='configs/config.yaml',
                        help='Path to configuration file')
     parser.add_argument('--model_path', type=str, required=True,
-                       help='Path to saved model')
+                       help='Path to saved weights (e.g. ./checkpoints/best_model.weights.h5)')
     parser.add_argument('--data_dir', type=str, required=True,
                        help='Path to test dataset directory')
     parser.add_argument('--output_dir', type=str, default='./evaluation_results',
@@ -39,7 +38,12 @@ def main():
     
     # Load model
     print(f"Loading model from {args.model_path}...")
-    model = ModelFactory.load_model(args.model_path)
+    model_cfg = config.get("model", {})
+    model = ModelFactory.create_and_load_weights(
+        model_name=model_cfg.get("name", "three_stream_efficientnet"),
+        config=model_cfg,
+        weights_path=args.model_path,
+    )
     
     # Evaluate
     print("Evaluating model...")
@@ -50,8 +54,8 @@ def main():
     y_true = []
     y_pred = []
     
-    for images, labels in test_dataset:
-        predictions = model.predict(images, verbose=0)
+    for (images, features), labels in test_dataset:
+        predictions = model.predict((images, features), verbose=0)
         y_pred.extend(np.argmax(predictions, axis=1))
         y_true.extend(labels.numpy())
     
@@ -89,11 +93,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
 

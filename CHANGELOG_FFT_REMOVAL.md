@@ -36,7 +36,7 @@ Removed all FFT (Fast Fourier Transform) functionality from the project. The pro
 ### 4. Configuration Files
 
 #### `configs/config.yaml`
-- ✅ Removed `fft_size` parameter from frequency_branch config
+- ✅ Removed `fft_size` parameter from frequency_stream config
 
 #### `configs/eda_config.json`
 - ✅ Removed `"fft_analysis"` from feature analysis list
@@ -84,15 +84,14 @@ fig = visualizer.plot_frequency_spectrum(real_img, fake_img)
 ### Model Configuration:
 ```yaml
 # Before
-frequency_branch:
+frequency_stream:
   enabled: true
   dct_size: 8
   fft_size: 256  # Remove this line
   num_filters: 64
 
 # After
-frequency_branch:
-  enabled: true
+frequency_stream:
   dct_size: 8
   num_filters: 64
 ```

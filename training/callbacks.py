@@ -4,7 +4,7 @@ Training callbacks.
 
 import tensorflow as tf
 from tensorflow import keras
-from typing import Dict, List, Optional
+from typing import Dict, List
 import os
 
 
@@ -42,22 +42,26 @@ def get_callbacks(config: Dict, output_dir: str = "./logs") -> List[tf.keras.cal
         
         callbacks.append(
             keras.callbacks.ModelCheckpoint(
-                filepath=os.path.join(save_dir, 'best_model.h5'),
+                # Save weights only (Keras 3 requires .weights.h5 for H5 weight files).
+                filepath=os.path.join(save_dir, "best_model.weights.h5"),
                 monitor=checkpoint_config.get('monitor', 'val_loss'),
                 save_best_only=checkpoint_config.get('save_best_only', True),
-                save_weights_only=False,
+                save_weights_only=True,
                 mode='min',
                 verbose=1
             )
         )
     
     # Early stopping
-    if callbacks_config.get('early_stopping', {}).get('enabled', True):
-        early_stopping_config = callbacks_config.get('early_stopping', {})
+    early_stopping_config = callbacks_config.get("early_stopping")
+    if early_stopping_config is None:
+        # Backward-compatible: allow early_stopping under training config.
+        early_stopping_config = config.get("training", {}).get("early_stopping", {})
+    if early_stopping_config.get("enabled", True):
         callbacks.append(
             keras.callbacks.EarlyStopping(
-                monitor=early_stopping_config.get('monitor', 'val_loss'),
-                patience=early_stopping_config.get('patience', 15),
+                monitor=early_stopping_config.get("monitor", "val_loss"),
+                patience=early_stopping_config.get("patience", 15),
                 restore_best_weights=True,
                 verbose=1
             )
@@ -77,11 +81,4 @@ def get_callbacks(config: Dict, output_dir: str = "./logs") -> List[tf.keras.cal
         )
     
     return callbacks
-
-
-
-
-
-
-
 
