@@ -254,7 +254,11 @@ If you use this code, please cite:
 }
 ```
  To start the training
-.\dfenv\python.exe serve.py --model_path .\checkpoints\best_model.weights.h5 --config configs\config.yaml
+.\dfenv\python.exe train.py --config configs\config.yaml
+
+To launch the website
+.\dfenv\python.exe serve.py --model_path .\checkpoints\best_model.weights.h5 --config configs\config.yaml --host 127.0.0.1 --port 8000
+
 
 To test
 curl.exe -F "file=@C:\Users\HP\Pictures\test.jpg" http://127.0.0.1:8000/predict

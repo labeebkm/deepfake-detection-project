@@ -3,11 +3,12 @@ FastAPI REST API for deepfake detection.
 """
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 import numpy as np
-import cv2
 from PIL import Image
 import io
+from pathlib import Path
 
 from .detector import DeepfakeDetector
 
@@ -29,6 +30,11 @@ def create_app(
         FastAPI application instance
     """
     app = FastAPI(title="Deepfake Detection API")
+    ui_dir = Path(__file__).resolve().parent / "static"
+    ui_path = ui_dir / "index.html"
+
+    if ui_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(ui_dir)), name="static")
     
     # Initialize detector
     detector = DeepfakeDetector(
@@ -37,9 +43,19 @@ def create_app(
         confidence_threshold=confidence_threshold,
     )
     
-    @app.get("/")
+    @app.get("/", response_class=FileResponse)
     def root():
-        """Root endpoint."""
+        """Web UI."""
+        if not ui_path.exists():
+            return HTMLResponse(
+                "<h2>UI file not found.</h2><p>Expected: inference/static/index.html</p>",
+                status_code=404,
+            )
+        return FileResponse(str(ui_path))
+
+    @app.get("/api")
+    def api_root():
+        """API status endpoint."""
         return {"message": "Deepfake Detection API", "status": "running"}
     
     @app.post("/predict")
@@ -53,14 +69,16 @@ def create_app(
         Returns:
             Prediction results
         """
+        if not file.content_type or not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="Please upload a valid image file.")
+
         # Read image
-        contents = await file.read()
-        image = Image.open(io.BytesIO(contents))
-        image = np.array(image)
-        
-        # Convert RGB if needed
-        if len(image.shape) == 3 and image.shape[2] == 4:
-            image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+        try:
+            contents = await file.read()
+            image = Image.open(io.BytesIO(contents)).convert("RGB")
+            image = np.array(image)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Could not read image: {e}")
         
         # Predict
         try:

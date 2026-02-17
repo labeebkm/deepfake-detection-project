@@ -6,6 +6,7 @@ import tensorflow as tf
 from PIL import Image
 
 from data.dataset_loader import DatasetLoader
+from inference.api import create_app
 from inference.detector import DeepfakeDetector
 from models.model_factory import ModelFactory
 from models.three_stream_net import ThreeStreamEfficientNet
@@ -110,3 +111,65 @@ def test_detector_predict_smoke():
         }
         assert 0.0 <= result["real_probability"] <= 1.0
         assert 0.0 <= result["fake_probability"] <= 1.0
+
+
+def test_api_root_and_predict_smoke():
+    from fastapi.testclient import TestClient
+    import io
+
+    # Build a tiny model, save weights, then verify API can reload + predict.
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        weights_path = tmp_path / "model.weights.h5"
+        config_path = tmp_path / "config.yaml"
+
+        cfg = {
+            "dataset": {"image_size": [224, 224], "batch_size": 2},
+            "model": {
+                "name": "three_stream_efficientnet",
+                "backbone": "efficientnet-b0",
+                "pretrained": False,
+                "num_classes": 2,
+                "dropout_rate": 0.1,
+                "frequency_stream": {"dct_size": 8, "num_filters": 8},
+                "feature_stream": {"input_dim": 128},
+            },
+        }
+
+        import yaml
+
+        config_path.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+
+        model = ModelFactory.create_model(cfg["model"]["name"], cfg["model"])
+        model((tf.zeros([1, 224, 224, 3]), tf.zeros([1, 128])), training=False)
+        model.save_weights(str(weights_path))
+
+        app = create_app(
+            weights_path=str(weights_path),
+            config_path=str(config_path),
+            confidence_threshold=0.5,
+        )
+        client = TestClient(app)
+
+        resp = client.get("/")
+        assert resp.status_code == 200
+        assert "Deepfake Image Detector" in resp.text
+
+        rng = np.random.default_rng(0)
+        img_arr = rng.integers(0, 255, size=(96, 96, 3), dtype=np.uint8)
+        buf = io.BytesIO()
+        Image.fromarray(img_arr).save(buf, format="PNG")
+        buf.seek(0)
+
+        resp = client.post(
+            "/predict",
+            files={"file": ("test.png", buf.read(), "image/png")},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert set(data.keys()) == {
+            "is_fake",
+            "confidence",
+            "real_probability",
+            "fake_probability",
+        }
