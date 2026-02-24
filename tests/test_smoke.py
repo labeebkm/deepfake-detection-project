@@ -66,6 +66,56 @@ def test_dataset_loader_split_shapes():
             assert labels.dtype == tf.int32
 
 
+def test_sparse_metrics_accept_sparse_labels():
+    from training.metrics import get_metrics
+
+    metrics = get_metrics(["precision", "recall", "f1_score", "auc"])
+
+    y_true = tf.constant([0, 1, 1, 0], dtype=tf.int32)
+    y_pred = tf.constant(
+        [
+            [0.9, 0.1],
+            [0.2, 0.8],
+            [0.3, 0.7],
+            [0.6, 0.4],
+        ],
+        dtype=tf.float32,
+    )
+
+    for metric in metrics:
+        metric.update_state(y_true, y_pred)
+        value = float(metric.result().numpy())
+        assert np.isfinite(value)
+
+
+def test_callbacks_reduce_lr_accepts_scientific_notation_strings(tmp_path: Path):
+    from tensorflow import keras
+
+    from training.callbacks import get_callbacks
+
+    cfg = {
+        "callbacks": {
+            "tensorboard": {"enabled": False},
+            "model_checkpoint": {"enabled": False},
+            "early_stopping": {"enabled": False},
+            "reduce_lr": {
+                "enabled": True,
+                "factor": "0.5",
+                "patience": "2",
+                "min_lr": "1e-7",
+            },
+        }
+    }
+
+    callbacks = get_callbacks(cfg, output_dir=str(tmp_path))
+    reduce_lr = next(
+        cb for cb in callbacks if isinstance(cb, keras.callbacks.ReduceLROnPlateau)
+    )
+
+    assert isinstance(reduce_lr.min_lr, float)
+    assert reduce_lr.min_lr == 1e-7
+
+
 def test_detector_predict_smoke():
     # Build a tiny model, save weights, then verify DeepfakeDetector can reload + predict.
     with tempfile.TemporaryDirectory() as tmp:

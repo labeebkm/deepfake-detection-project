@@ -31,7 +31,7 @@ model:
 
 # Training Configuration
 training:
-  epochs: 1
+  epochs: 50
   initial_learning_rate: 0.001
   learning_rate_schedule: "cosine"
   warmup_epochs: 5
@@ -77,10 +77,10 @@ loss:
 # Metrics
 metrics:
   - "accuracy"
-  # - "precision"
-  # - "recall"
-  # - "f1_score"
-  # - "auc"
+  - "precision"
+  - "recall"
+  - "f1_score"
+  - "auc"
 
 # Callbacks
 callbacks:
@@ -111,6 +111,9 @@ eda:
 # Inference Configuration
 inference:
   confidence_threshold: 0.5
+  # Backward compatibility for existing checkpoints trained with 0..1 inputs.
+  # Use "0_255" after retraining with the updated data pipeline.
+  input_scale_mode: "0_1"
   batch_size: 1
   return_attention_maps: true
   return_gradcam: true

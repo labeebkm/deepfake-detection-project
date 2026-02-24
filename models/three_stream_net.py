@@ -79,7 +79,10 @@ class ThreeStreamEfficientNet(keras.Model):
         self.rgb_backbone = backbone_cls(
             include_top=False,
             weights=weights,
-            input_shape=(224, 224, 3)
+            # Avoid hard-coding spatial resolution so the same code can train/infer
+            # with different image sizes (e.g., 224 for B0, 380 for B4) driven by
+            # the data pipeline/config.
+            input_shape=(None, None, 3),
         )
         self.rgb_backbone.trainable = True
         self.rgb_pool = layers.GlobalAveragePooling2D()

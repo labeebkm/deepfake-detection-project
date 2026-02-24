@@ -32,6 +32,15 @@ class DeepfakeDetector:
         with open(config_path, "r") as f:
             cfg = yaml.safe_load(f) or {}
 
+        dataset_cfg = cfg.get("dataset", {}) or {}
+        image_size = dataset_cfg.get("image_size", [224, 224])
+        if not isinstance(image_size, (list, tuple)) or len(image_size) != 2:
+            raise ValueError(
+                "dataset.image_size must be a 2-item list/tuple like [224, 224], "
+                f"got {image_size!r}"
+            )
+        self.image_size = (int(image_size[0]), int(image_size[1]))  # (H, W)
+
         model_cfg = cfg.get("model", {})
         model_name = model_cfg.get("name", "three_stream_efficientnet")
 
@@ -41,6 +50,13 @@ class DeepfakeDetector:
             weights_path=weights_path,
         )
         self.confidence_threshold = confidence_threshold
+        inference_cfg = cfg.get("inference", {})
+        self.input_scale_mode = str(inference_cfg.get("input_scale_mode", "0_1")).lower()
+        if self.input_scale_mode not in {"0_1", "0_255"}:
+            raise ValueError(
+                "inference.input_scale_mode must be '0_1' or '0_255', "
+                f"got {self.input_scale_mode!r}"
+            )
         feature_dim = model_cfg.get("feature_stream", {}).get("input_dim", 128)
         self.feature_generator = FeatureGenerator(feature_dim=feature_dim)
     
@@ -117,14 +133,15 @@ class DeepfakeDetector:
         image = self._ensure_rgb(image)
 
         # Match training: resize first, then compute features on uint8 resized image.
-        image_resized = cv2.resize(image, (224, 224))
+        h, w = self.image_size
+        image_resized = cv2.resize(image, (w, h))
 
         # Explicit features
         features = self.feature_generator.extract(image_resized)  # (feature_dim,)
         feature_batch = np.expand_dims(features.astype(np.float32), axis=0)
 
-        # Model image input
-        image_float = image_resized.astype(np.float32) / 255.0
+        # Model image input supports legacy 0..1 and newer 0..255 modes.
+        image_float = self._to_model_input(image_resized)
         image_batch = np.expand_dims(image_float, axis=0)
 
         return image_batch, feature_batch
@@ -136,14 +153,22 @@ class DeepfakeDetector:
 
         for img in images:
             img = self._ensure_rgb(img)
-            img_resized = cv2.resize(img, (224, 224))
+            h, w = self.image_size
+            img_resized = cv2.resize(img, (w, h))
 
             feature_batches.append(self.feature_generator.extract(img_resized))
-            image_batches.append(img_resized.astype(np.float32) / 255.0)
+            image_batches.append(self._to_model_input(img_resized))
 
         image_batch = np.array(image_batches, dtype=np.float32)
         feature_batch = np.array(feature_batches, dtype=np.float32)
 
         return image_batch, feature_batch
+
+    def _to_model_input(self, image_resized: np.ndarray) -> np.ndarray:
+        """Convert resized RGB uint8 image to model input scale."""
+        image_float = np.clip(image_resized.astype(np.float32), 0.0, 255.0)
+        if self.input_scale_mode == "0_1":
+            image_float = image_float / 255.0
+        return image_float
 
 

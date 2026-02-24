@@ -189,19 +189,21 @@ class DatasetLoader:
             image_bytes, channels=3, expand_animations=False
         )
 
-        # Model image input is float32 in [0, 1]
-        image_float = tf.image.convert_image_dtype(image_uint8, tf.float32)
+        # Keep model input in 0..255 float32 so EfficientNet's built-in preprocessing
+        # (Rescaling + Normalization layers) receives the expected range.
+        image_float = tf.cast(image_uint8, tf.float32)
         image_float = tf.image.resize(image_float, self.image_size)
+        image_float.set_shape([self.image_size[0], self.image_size[1], 3])
 
         # Explicit features are extracted in Python/NumPy (OpenCV + SciPy).
         # Match inference: compute features from the resized uint8 image.
-        image_uint8 = tf.cast(
-            tf.clip_by_value(image_float * 255.0, 0.0, 255.0),
+        image_uint8_resized = tf.cast(
+            tf.clip_by_value(image_float, 0.0, 255.0),
             tf.uint8,
         )
         features = tf.numpy_function(
             func=self.feature_generator.extract,
-            inp=[image_uint8],
+            inp=[image_uint8_resized],
             Tout=tf.float32,
         )
         features.set_shape([self.feature_dim])

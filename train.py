@@ -119,7 +119,9 @@ def main():
     feature_dim = (
         config.get("model", {}).get("feature_stream", {}).get("input_dim", 128)
     )
-    dummy_images = tf.zeros([1, 224, 224, 3], dtype=tf.float32)
+    image_size = config.get("dataset", {}).get("image_size", [224, 224])
+    dummy_h, dummy_w = int(image_size[0]), int(image_size[1])
+    dummy_images = tf.zeros([1, dummy_h, dummy_w, 3], dtype=tf.float32)
     dummy_features = tf.zeros([1, feature_dim], dtype=tf.float32)
     model((dummy_images, dummy_features), training=False)
 

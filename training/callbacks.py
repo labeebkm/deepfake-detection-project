@@ -8,6 +8,38 @@ from typing import Dict, List
 import os
 
 
+def _as_float(value, name: str) -> float:
+    if value is None:
+        raise ValueError(f"{name} must be a number, got None")
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError as exc:
+            raise ValueError(f"{name} must be a number, got {value!r}") from exc
+    raise TypeError(f"{name} must be a number, got {type(value).__name__}")
+
+
+def _as_int(value, name: str) -> int:
+    if value is None:
+        raise ValueError(f"{name} must be an int, got None")
+    if isinstance(value, bool):
+        raise TypeError(f"{name} must be an int, got bool")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        if value.is_integer():
+            return int(value)
+        raise ValueError(f"{name} must be an int, got {value!r}")
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError as exc:
+            raise ValueError(f"{name} must be an int, got {value!r}") from exc
+    raise TypeError(f"{name} must be an int, got {type(value).__name__}")
+
+
 def get_callbacks(config: Dict, output_dir: str = "./logs") -> List[tf.keras.callbacks.Callback]:
     """
     Get training callbacks based on configuration.
@@ -73,9 +105,9 @@ def get_callbacks(config: Dict, output_dir: str = "./logs") -> List[tf.keras.cal
         callbacks.append(
             keras.callbacks.ReduceLROnPlateau(
                 monitor='val_loss',
-                factor=reduce_lr_config.get('factor', 0.5),
-                patience=reduce_lr_config.get('patience', 5),
-                min_lr=reduce_lr_config.get('min_lr', 1e-7),
+                factor=_as_float(reduce_lr_config.get('factor', 0.5), "callbacks.reduce_lr.factor"),
+                patience=_as_int(reduce_lr_config.get('patience', 5), "callbacks.reduce_lr.patience"),
+                min_lr=_as_float(reduce_lr_config.get('min_lr', 1e-7), "callbacks.reduce_lr.min_lr"),
                 verbose=1
             )
         )

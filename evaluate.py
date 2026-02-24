@@ -44,6 +44,11 @@ def main():
         config=model_cfg,
         weights_path=args.model_path,
     )
+    model.compile(
+        optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+    )
     
     # Evaluate
     print("Evaluating model...")

@@ -99,6 +99,15 @@ class Augmentor:
         """
         if not self.enabled:
             return image, label
+
+        image = tf.cast(image, tf.float32)
+        # Support both 0..1 and 0..255 inputs. Augment in 0..1 space for stable params.
+        input_scale = tf.cond(
+            tf.reduce_max(image) > 1.5,
+            lambda: tf.constant(255.0, dtype=tf.float32),
+            lambda: tf.constant(1.0, dtype=tf.float32),
+        )
+        image = image / input_scale
         
         # Random horizontal flip
         if self.config.get('horizontal_flip', 0.5) > 0:
@@ -126,8 +135,9 @@ class Augmentor:
         if self.config.get('hue', 0) > 0:
             image = tf.image.random_hue(image, max_delta=self.config.get('hue', 0.1))
         
-        # Ensure values are in [0, 1]
+        # Ensure values are in [0, 1], then restore original scale.
         image = tf.clip_by_value(image, 0.0, 1.0)
+        image = image * input_scale
         
         return image, label
     
