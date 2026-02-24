@@ -259,6 +259,8 @@ If you use this code, please cite:
 To launch the website
 .\dfenv\python.exe serve.py --model_path .\checkpoints\best_model.weights.h5 --config configs\config.yaml --host 127.0.0.1 --port 8000
 
+For eda report generation
+python eda_report.py --dataset faceforensics --data_dir "C:\Users\HP\Documents\QUEST\deepfake project\dataset" --output ./reports --format html --visualize --save
 
 To test
 curl.exe -F "file=@C:\Users\HP\Pictures\test.jpg" http://127.0.0.1:8000/predict

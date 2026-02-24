@@ -39,7 +39,7 @@ def main():
     
     # Initialize components
     analyzer = DataAnalyzer(args.data_dir, eda_config)
-    visualizer = EDAVisualizer(interactive=True)
+    visualizer = EDAVisualizer()
     tester = StatisticalTester(alpha=eda_config.get('eda', {}).get('statistical_tests', {}).get('alpha', 0.05))
     detector = ArtifactDetector()
     report_gen = ReportGenerator(output_dir=args.output)

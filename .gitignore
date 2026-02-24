@@ -49,7 +49,6 @@ venv.bak/
 *.ipynb_checkpoints/
 
 # Model checkpoints and logs
-checkpoints/
 logs/
 *.h5
 *.hdf5
