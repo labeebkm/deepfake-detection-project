@@ -29,21 +29,28 @@ class FrequencyNet(keras.Model):
         self.dct_size = dct_size
         self.num_filters = num_filters
 
+        # Always compute the frequency stream in float32.
+        #
+        # Rationale: the 2D DCT magnitude can exceed float16 range for larger
+        # resolutions (e.g., 380x380), which can overflow under mixed precision
+        # and quickly produce NaN loss.
         self.dct_conv = layers.Conv2D(
             num_filters,
             (3, 3),
             padding="same",
             activation="relu",
+            dtype="float32",
         )
-        self.dct_bn = layers.BatchNormalization()
+        self.dct_bn = layers.BatchNormalization(dtype="float32")
 
         self.process_conv = layers.Conv2D(
             num_filters,
             (3, 3),
             padding="same",
             activation="relu",
+            dtype="float32",
         )
-        self.process_bn = layers.BatchNormalization()
+        self.process_bn = layers.BatchNormalization(dtype="float32")
 
     def call(self, inputs: tf.Tensor, training: Optional[bool] = None) -> tf.Tensor:
         """
@@ -65,10 +72,6 @@ class FrequencyNet(keras.Model):
 
         processed = self.process_conv(dct_features)
         processed = self.process_bn(processed, training=training)
-
-        # If the rest of the model runs in mixed precision, cast back.
-        if tf.keras.mixed_precision.global_policy().compute_dtype == "float16":
-            processed = tf.cast(processed, tf.float16)
 
         return processed
 
@@ -94,4 +97,3 @@ class FrequencyNet(keras.Model):
 
         magnitude = tf.abs(dct_2d)
         return tf.expand_dims(magnitude, axis=-1)
-

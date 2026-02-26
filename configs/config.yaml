@@ -16,9 +16,9 @@ dataset:
 # Model Configuration
 model:
   name: "three_stream_efficientnet"
-  # NOTE: Your current environment reports no GPU. EfficientNet-B0 is much faster on CPU.
-  # You can switch back to "efficientnet-b4" when training on a GPU.
-  backbone: "efficientnet-b0"
+  # Backbone must match the checkpoint you're loading.
+  # EfficientNet-B4 is slower on CPU; use B0 only with B0-trained weights.
+  backbone: "efficientnet-b4"
   pretrained: true
   num_classes: 2
   dropout_rate: 0.5

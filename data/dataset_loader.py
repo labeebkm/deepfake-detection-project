@@ -164,12 +164,14 @@ class DatasetLoader:
 
         ds = tf.data.Dataset.from_tensor_slices((file_paths_t, labels_t))
 
-        ds = ds.map(self._load_and_preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
-
         if split == "train":
             buffer_size = min(len(file_paths), 10_000)
             if buffer_size > 1:
                 ds = ds.shuffle(buffer_size=buffer_size, reshuffle_each_iteration=True)
+
+        # Shuffle before expensive preprocessing so the shuffle buffer holds file paths
+        # (fast) rather than fully decoded/resized images + extracted features (slow).
+        ds = ds.map(self._load_and_preprocess_image, num_parallel_calls=tf.data.AUTOTUNE)
 
         ds = ds.batch(self.batch_size)
         ds = ds.prefetch(tf.data.AUTOTUNE)

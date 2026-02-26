@@ -81,6 +81,8 @@ evaluation_results/
 .env.local
 .env.*.local
 
+checkpoints/
+
 # OS files
 .DS_Store
 .DS_Store?

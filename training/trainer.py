@@ -49,7 +49,13 @@ class Trainer:
         
         # Optimizer
         lr = float(self.training_config.get('initial_learning_rate', 0.001))
-        optimizer = keras.optimizers.Adam(learning_rate=lr)
+        clipnorm = self.training_config.get("gradient_clip_norm")
+        if clipnorm is not None:
+            clipnorm = float(clipnorm)
+            if clipnorm <= 0:
+                clipnorm = None
+
+        optimizer = keras.optimizers.Adam(learning_rate=lr, clipnorm=clipnorm)
         
         # Metrics
         metrics_config = self.config.get('metrics', ['accuracy'])

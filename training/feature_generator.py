@@ -53,6 +53,15 @@ class FeatureGenerator:
         
         # Feature vector construction
         feature_vector = np.array(features, dtype=np.float32)
+
+        # Defensive: some stats (e.g., skew/kurtosis on near-constant channels) can
+        # produce NaN/inf and break training. Replace non-finite values with 0.
+        feature_vector = np.nan_to_num(
+            feature_vector,
+            nan=0.0,
+            posinf=0.0,
+            neginf=0.0,
+        )
         
         # Padding or truncation to fixed dimension
         if len(feature_vector) < self.feature_dim:
@@ -124,7 +133,13 @@ class FeatureGenerator:
             channel = ycrcb[:,:,i].flatten()
             stats.append(np.mean(channel))
             stats.append(np.std(channel))
-            stats.append(skew(channel) if len(channel) > 0 else 0)
-            stats.append(kurtosis(channel) if len(channel) > 0 else 0)
+            if len(channel) > 0:
+                s = skew(channel)
+                k = kurtosis(channel)
+                stats.append(float(s) if np.isfinite(s) else 0.0)
+                stats.append(float(k) if np.isfinite(k) else 0.0)
+            else:
+                stats.append(0.0)
+                stats.append(0.0)
             
         return stats
