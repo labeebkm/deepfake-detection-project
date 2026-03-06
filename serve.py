@@ -29,13 +29,22 @@ def main():
         default=0.5,
         help="Confidence threshold for predictions",
     )
+    parser.add_argument(
+        "--cors_origins",
+        type=str,
+        default="*",
+        help="Comma-separated CORS origins (e.g. http://localhost:5500,http://127.0.0.1:5500)",
+    )
 
     args = parser.parse_args()
+
+    cors_origins = [origin.strip() for origin in args.cors_origins.split(",") if origin.strip()]
 
     app = create_app(
         weights_path=args.model_path,
         config_path=args.config,
         confidence_threshold=args.confidence_threshold,
+        cors_origins=cors_origins,
     )
 
     uvicorn.run(app, host=args.host, port=args.port)
@@ -43,4 +52,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

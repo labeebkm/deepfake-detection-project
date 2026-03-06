@@ -265,3 +265,23 @@ python eda_report.py --dataset faceforensics --data_dir "C:\Users\HP\Documents\Q
 To test
 curl.exe -F "file=@C:\Users\HP\Pictures\test.jpg" http://127.0.0.1:8000/predict
 
+
+.\dfenv\python.exe serve.py --model_path .\checkpoints\final_model.weights.h5 --config configs\config.yaml --host 127.0.0.1 --port 80
+
+
+
+#To launch the tensorboard
+tensorboard --logdir ./logs
+
+#Steps to launch the gradcam (follow these below given steps)
+1. Start server bound to IPv4 (new terminal):
+cd C:\Users\HP\Documents\QUEST\dfprojectv2
+python -m http.server 5500 --bind 127.0.0.1
+
+2. Then open new terminal and run these: 
+Start-Process "http://127.0.0.1:5500/demo.html"
+
+3. Now run these:
+python serve.py --model_path .\checkpoints\best_model.weights.h5 --config .\configs\config.yaml --host 127.0.0.1 --port 8000 --cors_origins "*"
+
+

@@ -111,9 +111,10 @@ eda:
 # Inference Configuration
 inference:
   confidence_threshold: 0.5
-  # Backward compatibility for existing checkpoints trained with 0..1 inputs.
-  # Use "0_255" after retraining with the updated data pipeline.
-  input_scale_mode: "0_1"
+  # Model input scaling for inference.
+  # - "0_255": pass raw uint8-range pixels (recommended; matches Keras EfficientNet preprocessing layers).
+  # - "0_1": only if you trained with inputs already normalized to 0..1 AND removed/disabled EfficientNet's internal rescaling.
+  input_scale_mode: "0_255"
   batch_size: 1
   return_attention_maps: true
   return_gradcam: true
