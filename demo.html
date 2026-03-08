@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deepfake Detector Demo</title>
+  <style>
+    :root {
+      --bg: #0a1628;
+      --panel: #101f35;
+      --panel-soft: #162844;
+      --text: #eaf2ff;
+      --muted: #98abc7;
+      --accent: #6aa9ff;
+      --ok: #21d07a;
+      --danger: #ff4d5a;
+      --warning: #ffb54a;
+      --border: rgba(255, 255, 255, 0.14);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, #1a345f 0%, transparent 60%),
+        radial-gradient(900px 500px at 95% 0%, #1d2f4e 0%, transparent 65%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: min(1200px, 94vw);
+      margin: 28px auto 44px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.1;
+      letter-spacing: 0.4px;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      margin: 8px 0 28px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 1024px) {
+      .grid {
+        grid-template-columns: 380px 1fr;
+      }
+    }
+
+    .card {
+      background: linear-gradient(165deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(4px);
+    }
+
+    .upload-card {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 520px;
+    }
+
+    .dropzone {
+      border: 1.5px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(0, 0, 0, 0.16);
+      transition: 200ms ease;
+      cursor: pointer;
+      min-height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(106, 169, 255, 0.1);
+      color: #cfe5ff;
+      transform: translateY(-1px);
+    }
+
+    .preview-box {
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #0b1322;
+      overflow: hidden;
+      min-height: 210px;
+      display: grid;
+      place-items: center;
+    }
+
+    .preview-box img {
+      width: 100%;
+      height: 100%;
+      max-height: 280px;
+      object-fit: cover;
+      display: none;
+    }
+
+    .preview-placeholder {
+      color: var(--muted);
+      font-size: 0.95rem;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 150ms ease, opacity 150ms ease;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      flex: 1;
+      color: #061126;
+      background: linear-gradient(120deg, #7ec2ff, #4d9fff);
+    }
+
+    .btn-secondary {
+      color: #d6e7ff;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hidden-file {
+      display: none;
+    }
+
+    .result-card {
+      padding: 20px;
+      min-height: 520px;
+    }
+
+    .spinner-wrap {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: #c6d6ef;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top: 2px solid #8bc5ff;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error {
+      display: none;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      background: rgba(255, 77, 90, 0.16);
+      border: 1px solid rgba(255, 77, 90, 0.5);
+      color: #ffd7dc;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .verdict {
+      font-size: clamp(22px, 3.4vw, 40px);
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin: 2px 0 8px;
+    }
+
+    .verdict.ok { color: var(--ok); }
+    .verdict.danger { color: var(--danger); }
+
+    .metric {
+      margin: 12px 0;
+    }
+
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      color: #d6e5fa;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    .track {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0;
+      transition: width 400ms ease;
+    }
+
+    .bar.main { background: linear-gradient(90deg, #87c7ff, #4588ff); }
+    .bar.real { background: linear-gradient(90deg, #3dd98f, #17b56f); }
+    .bar.fake { background: linear-gradient(90deg, #ff737f, #ff3f4f); }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    @media (min-width: 780px) {
+      .image-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .img-panel {
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: #0d182d;
+      overflow: hidden;
+    }
+
+    .img-panel h3 {
+      margin: 0;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.35px;
+      color: #d3e5ff;
+      background: rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .img-panel img {
+      width: 100%;
+      height: 320px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .explain {
+      margin-top: 16px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #d5e4fb;
+      padding: 12px;
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .footnote {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title">Deepfake Image Detection</h1>
+    <p class="subtitle">TensorFlow + FastAPI + Grad-CAM Explainability Demo</p>
+
+    <div class="grid">
+      <section class="card upload-card">
+        <h2 style="margin:0;font-size:1.1rem;">Upload Image</h2>
+
+        <div id="dropzone" class="dropzone" role="button" tabindex="0" aria-label="Drop image here or click to browse">
+          Drag & drop image here<br/>or click to select
+        </div>
+
+        <div class="preview-box">
+          <img id="preview" alt="Selected preview" />
+          <div id="previewPlaceholder" class="preview-placeholder">No image selected yet</div>
+        </div>
+
+        <input id="fileInput" class="hidden-file" type="file" accept="image/*" />
+
+        <div class="btn-row">
+          <button id="browseBtn" class="btn-secondary" type="button">Choose File</button>
+          <button id="analyseBtn" class="btn-primary" type="button" disabled>Analyse</button>
+        </div>
+
+        <p class="footnote">API endpoint: <code>POST http://localhost:8000/predict?explain=true</code></p>
+      </section>
+
+      <section class="card result-card">
+        <div id="spinnerWrap" class="spinner-wrap">
+          <div class="spinner"></div>
+          <div>Running model inference and Grad-CAM analysis...</div>
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <div id="results" style="display:none;">
+          <div id="verdict" class="verdict">RESULT</div>
+
+          <div class="metric">
+            <div class="metric-top">
+              <span>Model Confidence</span>
+              <strong id="confidenceText">0%</strong>
+            </div>
+            <div class="track"><div id="confidenceBar" class="bar main"></div></div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-top"><span>Real Probability</span><strong id="realText">0%</strong></div>
+            <div class="track"><div id="realBar" class="bar real"></div></div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-top"><span>Fake Probability</span><strong id="fakeText">0%</strong></div>
+            <div class="track"><div id="fakeBar" class="bar fake"></div></div>
+          </div>
+
+          <div class="image-grid">
+            <div class="img-panel">
+              <h3>Original Image</h3>
+              <img id="resultOriginal" alt="Original image" />
+            </div>
+            <div class="img-panel">
+              <h3>Grad-CAM Overlay</h3>
+              <img id="resultCam" alt="Grad-CAM heatmap overlay" />
+            </div>
+          </div>
+
+          <div id="explainText" class="explain"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:8000/predict?explain=true";
+
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    const browseBtn = document.getElementById("browseBtn");
+    const analyseBtn = document.getElementById("analyseBtn");
+    const preview = document.getElementById("preview");
+    const previewPlaceholder = document.getElementById("previewPlaceholder");
+    const spinnerWrap = document.getElementById("spinnerWrap");
+    const errorBox = document.getElementById("error");
+    const results = document.getElementById("results");
+    const verdict = document.getElementById("verdict");
+    const confidenceText = document.getElementById("confidenceText");
+    const realText = document.getElementById("realText");
+    const fakeText = document.getElementById("fakeText");
+    const confidenceBar = document.getElementById("confidenceBar");
+    const realBar = document.getElementById("realBar");
+    const fakeBar = document.getElementById("fakeBar");
+    const resultOriginal = document.getElementById("resultOriginal");
+    const resultCam = document.getElementById("resultCam");
+    const explainText = document.getElementById("explainText");
+
+    let selectedFile = null;
+
+    const pct = (v) => `${Math.max(0, Math.min(100, v * 100)).toFixed(2)}%`;
+
+    function setLoading(loading) {
+      spinnerWrap.style.display = loading ? "flex" : "none";
+      analyseBtn.disabled = loading || !selectedFile;
+      browseBtn.disabled = loading;
+      dropzone.style.pointerEvents = loading ? "none" : "auto";
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.style.display = "block";
+    }
+
+    function clearError() {
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
+    }
+
+    function showPreview(file) {
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.style.display = "block";
+      previewPlaceholder.style.display = "none";
+      resultOriginal.src = url;
+      analyseBtn.disabled = false;
+    }
+
+    function setFile(file) {
+      if (!file || !file.type.startsWith("image/")) {
+        showError("Please choose a valid image file.");
+        return;
+      }
+      selectedFile = file;
+      clearError();
+      showPreview(file);
+    }
+
+    function setResult(payload) {
+      results.style.display = "block";
+
+      const isFake = !!payload.is_fake;
+      const conf = Number(payload.confidence || 0);
+      const real = Number(payload.real_probability || 0);
+      const fake = Number(payload.fake_probability || 0);
+
+      verdict.textContent = isFake ? "DEEPFAKE DETECTED" : "REAL IMAGE";
+      verdict.className = `verdict ${isFake ? "danger" : "ok"}`;
+
+      confidenceText.textContent = pct(conf);
+      realText.textContent = pct(real);
+      fakeText.textContent = pct(fake);
+
+      confidenceBar.style.width = pct(conf);
+      realBar.style.width = pct(real);
+      fakeBar.style.width = pct(fake);
+
+      if (payload.gradcam_heatmap) {
+        resultCam.src = payload.gradcam_heatmap;
+      } else {
+        resultCam.src = "";
+        showError(payload.gradcam_error || "Prediction succeeded, but Grad-CAM was not returned.");
+      }
+
+      const strongFake = fake > 0.75;
+      const strongReal = real > 0.75;
+
+      if (isFake) {
+        explainText.textContent = strongFake
+          ? "The highlighted regions indicate areas that strongly influenced the model toward a fake classification, suggesting potential synthesis artifacts or inconsistent local textures."
+          : "The model leans toward fake. The highlighted regions show where evidence was found, but confidence is moderate, so manual review is recommended.";
+      } else {
+        explainText.textContent = strongReal
+          ? "The highlighted regions were inspected by the model and appear consistent with a real image distribution."
+          : "The model predicts real with moderate confidence. The highlighted regions show the most influential evidence for this decision.";
+      }
+    }
+
+    async function analyseImage() {
+      if (!selectedFile) {
+        showError("Please select an image first.");
+        return;
+      }
+
+      clearError();
+      setLoading(true);
+      results.style.display = "none";
+
+      try {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        const res = await fetch(API_URL, {
+          method: "POST",
+          body: formData
+        });
+
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          throw new Error("Server returned a non-JSON response.");
+        }
+
+        if (!res.ok) {
+          const msg = data?.detail || data?.error || `Request failed with status ${res.status}`;
+          throw new Error(msg);
+        }
+
+        setResult(data);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Unknown error while calling API.";
+        if (msg.toLowerCase().includes("failed to fetch")) {
+          showError("Cannot connect to API. Start FastAPI on http://localhost:8000 and ensure CORS is enabled.");
+        } else {
+          showError(msg);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    browseBtn.addEventListener("click", () => fileInput.click());
+    analyseBtn.addEventListener("click", analyseImage);
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      setFile(file);
+    });
+
+    dropzone.addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((evt) => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add("dragover");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((evt) => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove("dragover");
+      });
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      setFile(file);
+    });
+  </script>
+</body>
+</html>

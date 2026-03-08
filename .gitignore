@@ -72,7 +72,6 @@ logs/
 reports/visualizations/
 reports/statistics/
 evaluation_results/
-*.html
 *.pdf
 !reports/*.md
 
